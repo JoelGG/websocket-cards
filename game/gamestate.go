@@ -29,7 +29,7 @@ func NewPlayer() Player {
 	return p
 }
 
-func (g GameStateBrag) Consume(m Move) (GameStateBrag, error) {
+func (g *GameStateBrag) Consume(m Move) (GameStateBrag, error) {
 	g.Index++
-	return g, nil
+	return *g, nil
 }

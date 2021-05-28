@@ -44,15 +44,14 @@ func (g *GameControllerBrag) Consume(inc Incoming) (Outgoing, error) {
 	}
 
 	newstate, err := g.state.Consume(move)
+	fmt.Println(newstate.Index)
 
 	if err != nil {
 		return Outgoing{}, err
 	} else {
 		g.history = append(g.history, g.state)
 		g.state = newstate
-		otg, err := g.stateEncode(newstate)
-
-		fmt.Println("new state", otg)
+		otg, err := g.stateEncode(g.state)
 
 		if err != nil {
 			return Outgoing{}, err
@@ -63,7 +62,9 @@ func (g *GameControllerBrag) Consume(inc Incoming) (Outgoing, error) {
 }
 
 func (g *GameControllerBrag) stateEncode(state GameStateBrag) (string, error) {
-	otp, err := json.Marshal(GameStateBrag{})
+	otp, err := json.Marshal(state)
+
+	fmt.Println(state.Deck)
 
 	if err != nil {
 		return "", err
