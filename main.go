@@ -4,10 +4,11 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/joelgg/brag/router"
 )
 
 func main() {
-	hub := NewHub()
+	hub := router.NewHub()
 	r := mux.NewRouter()
 	r.HandleFunc("/connect/{roomid}", hub.NewConnection)
 	r.HandleFunc("/checkroom/{roomid}", hub.LobbyExists)

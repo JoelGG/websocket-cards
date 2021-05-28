@@ -1,16 +1,19 @@
-package main
+package router
 
 import (
+	"fmt"
+	"log"
+
 	"github.com/gorilla/websocket"
 	"github.com/joelgg/brag/game"
 )
 
 type Lobby struct {
-	clients   map[int]*Client
-	msgs      chan WsMsg
-	messages  []*Message
-	index     int
-	gameState game.GameState
+	clients        map[int]*Client
+	msgs           chan WsMsg
+	messages       []*Message
+	index          int
+	gameController game.GameController
 }
 
 func NewLobby() *Lobby {
@@ -23,6 +26,8 @@ func NewLobby() *Lobby {
 }
 
 func (l *Lobby) Start() {
+	l.gameController = &game.GameControllerBrag{}
+
 	for {
 		m := <-l.msgs
 
@@ -33,14 +38,30 @@ func (l *Lobby) Start() {
 			client.Close()
 		}
 
+		// logging the message
 		message := NewMessage(string(m.msg), client)
 		l.messages = append(l.messages, message)
 
-		for x, cli := range l.clients {
-			if x != m.idx {
-				err := cli.conn.WriteMessage(m.mt, []byte(message.ToString()))
-				if err != nil {
-					panic(err)
+		log.Println(string(m.msg))
+
+		newstate, err := l.gameController.Consume(
+			game.Incoming{
+				Player: m.idx,
+				Msg:    string(m.msg),
+			},
+		)
+
+		if err != nil {
+			log.Println("state update error")
+			fmt.Println(err)
+			l.clients[m.idx].conn.WriteMessage(m.mt, []byte("error"))
+		} else {
+			for x, cli := range l.clients {
+				if x != m.idx {
+					err := cli.conn.WriteMessage(m.mt, []byte(newstate.Msg))
+					if err != nil {
+						panic(err)
+					}
 				}
 			}
 		}
